@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Services - QCom Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #f59e0b;
+            --tertiary: #64748b;
+            --background: #fafafa;
+            --success: #10b981;
+            --warning: #f97316;
+            --error: #ef4444;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fafafa 0%, #f1f5f9 100%);
+            overflow-x: hidden;
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .service-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .service-card:hover::before {
+            left: 100%;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.98);
+        }
+        
+        .api-endpoint {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .api-endpoint::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--secondary);
+        }
+        
+        .method-get { border-left-color: #10b981; }
+        .method-post { border-left-color: #3b82f6; }
+        .method-put { border-left-color: #f59e0b; }
+        .method-delete { border-left-color: #ef4444; }
+        
+        .architecture-diagram {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-icon { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .catalog-icon { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .inventory-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .pricing-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .orders-icon { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .fulfill-icon { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .notify-icon { background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%); }
+        
+        .dependency-line {
+            stroke: #64748b;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5,5;
+            animation: dash 20s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -100;
+            }
+        }
+        
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.2s ease;
+        }
+        
+        .tech-badge:hover {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+        
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        
+        .highlight {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--secondary);
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">Q</span>
+                    </div>
+                    <span class="text-xl font-bold text-slate-800">QCom</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link text-slate-600 hover:text-slate-800 font-medium">Overview</a>
+                    <a href="services.html" class="nav-link active text-slate-800 font-medium">Services</a>
+                    <a href="frontend.html" class="nav-link text-slate-600 hover:text-slate-800 font-medium">Frontend</a>
+                    <a href="infrastructure.html" class="nav-link text-slate-600 hover:text-slate-800 font-medium">Infrastructure</a>
+                </div>
+                <button class="md:hidden p-2 rounded-lg bg-slate-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-16 bg-gradient-to-br from-slate-800 to-slate-900">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl font-bold text-white mb-6">Backend Services</h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Microservices architecture built for scale, reliability, and maintainability. 
+                    Each service is independently deployable with clear boundaries and responsibilities.
+                </p>
+            </div>
+            
+            <div class="architecture-diagram">
+                <img src="resources/service-architecture.png" alt="Service Architecture" class="w-full h-auto rounded-lg">
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Overview -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">Core Services</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    Seven independent microservices working together to power the QCom platform
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                <!-- Auth Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon auth-icon text-white">🔐</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Auth Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Global user authentication and authorization with JWT tokens, role-based access control, 
+                        and multi-tenant support for sellers, warehouse staff, and customers.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-post">POST /register</div>
+                        <div class="api-endpoint method-post">POST /login</div>
+                        <div class="api-endpoint method-post">POST /token/refresh</div>
+                        <div class="api-endpoint method-get">GET /me</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• JWT token generation and validation</li>
+                            <li>• Role-based permissions (customer, seller, warehouse, rider)</li>
+                            <li>• Multi-factor authentication support</li>
+                            <li>• Session management and token refresh</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">JWT</span>
+                        <span class="tech-badge">PostgreSQL</span>
+                    </div>
+                </div>
+                
+                <!-- Catalog Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon catalog-icon text-white">📦</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Catalog Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Product and SKU management with multi-seller support, category hierarchies, 
+                        variant management, and real-time price updates across all channels.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-get">GET /products</div>
+                        <div class="api-endpoint method-post">POST /products</div>
+                        <div class="api-endpoint method-get">GET /products/:id</div>
+                        <div class="api-endpoint method-put">PUT /products/:id</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Multi-seller product management</li>
+                            <li>• Category and attribute system</li>
+                            <li>• SKU variant management</li>
+                            <li>• Price and inventory synchronization</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">PostgreSQL</span>
+                        <span class="tech-badge">Redis</span>
+                    </div>
+                </div>
+                
+                <!-- Inventory Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon inventory-icon text-white">🏭</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Inventory Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Real-time inventory management across multiple warehouses with atomic stock reservations, 
+                        movement tracking, and intelligent warehouse selection algorithms.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-post">POST /availability</div>
+                        <div class="api-endpoint method-post">POST /reservations</div>
+                        <div class="api-endpoint method-post">POST /reservations/:id/confirm</div>
+                        <div class="api-endpoint method-post">POST /reservations/:id/release</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Multi-warehouse stock management</li>
+                            <li>• Atomic reservation system</li>
+                            <li>• Intelligent warehouse routing</li>
+                            <li>• Real-time stock movements</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">PostgreSQL</span>
+                        <span class="tech-badge">PostGIS</span>
+                    </div>
+                </div>
+                
+                <!-- Pricing Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon pricing-icon text-white">💰</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Pricing Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Dynamic pricing engine with delivery fee calculation, user policy management, 
+                        promotional discounts, and real-time tax computation for different regions.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-post">POST /quote</div>
+                        <div class="api-endpoint method-get">GET /policies/:userId</div>
+                        <div class="api-endpoint method-post">POST /policies</div>
+                        <div class="api-endpoint method-get">GET /delivery-fee</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Dynamic delivery fee calculation</li>
+                            <li>• User-specific pricing policies</li>
+                            <li>• Distance-based pricing</li>
+                            <li>• Promotional discount engine</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">PostGIS</span>
+                        <span class="tech-badge">Redis</span>
+                    </div>
+                </div>
+                
+                <!-- Orders Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon orders-icon text-white">🛒</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Orders Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Order lifecycle management with cart operations, checkout flow, payment processing, 
+                        and comprehensive order tracking with idempotent operations.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-post">POST /cart/items</div>
+                        <div class="api-endpoint method-post">POST /checkout</div>
+                        <div class="api-endpoint method-get">GET /orders/:id</div>
+                        <div class="api-endpoint method-post">POST /orders/:id/cancel</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Shopping cart management</li>
+                            <li>• Idempotent checkout process</li>
+                            <li>• COD payment workflow</li>
+                            <li>• Order status tracking</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">PostgreSQL</span>
+                        <span class="tech-badge">Kafka</span>
+                    </div>
+                </div>
+                
+                <!-- Fulfillment Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon fulfill-icon text-white">🚚</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Fulfillment Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Warehouse operations management with pick/pack workflows, task assignment, 
+                        rider coordination, and real-time fulfillment status updates.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-get">GET /keeper/tasks</div>
+                        <div class="api-endpoint method-post">POST /keeper/pick/start</div>
+                        <div class="api-endpoint method-post">POST /keeper/pack/complete</div>
+                        <div class="api-endpoint method-post">POST /fulfillment/assign</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Warehouse task management</li>
+                            <li>• Pick and pack workflows</li>
+                            <li>• Rider assignment system</li>
+                            <li>• Real-time status updates</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">PostgreSQL</span>
+                        <span class="tech-badge">WebSocket</span>
+                    </div>
+                </div>
+                
+                <!-- Notifications Service -->
+                <div class="service-card rounded-2xl p-8">
+                    <div class="service-icon notify-icon text-white">📧</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Notifications Service</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Multi-channel notification system with email, SMS, and push notifications, 
+                        event-driven triggers, and customizable notification templates.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="api-endpoint method-post">POST /notifications/email</div>
+                        <div class="api-endpoint method-post">POST /notifications/sms</div>
+                        <div class="api-endpoint method-post">POST /notifications/push</div>
+                        <div class="api-endpoint method-get">GET /templates</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-slate-800 mb-2">Key Features</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Email notification delivery</li>
+                            <li>• SMS and push notifications</li>
+                            <li>• Template management system</li>
+                            <li>• Event-driven triggers</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tech-badge">TypeScript</span>
+                        <span class="tech-badge">Fastify</span>
+                        <span class="tech-badge">Nodemailer</span>
+                        <span class="tech-badge">Kafka</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Service Communication -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">Service Communication</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    Event-driven architecture with Kafka for asynchronous communication and GraphQL gateway for synchronous API aggregation
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Event Topics</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 p-4 bg-green-50 rounded-lg">
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-slate-800">user.created</div>
+                                <div class="text-sm text-slate-600">New user registration</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-slate-800">product.created</div>
+                                <div class="text-sm text-slate-600">New product added</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg">
+                            <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-slate-800">order.placed</div>
+                                <div class="text-sm text-slate-600">Customer order submitted</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-4 bg-orange-50 rounded-lg">
+                            <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-slate-800">inventory.reserved</div>
+                                <div class="text-sm text-slate-600">Stock reservation confirmed</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-4 bg-cyan-50 rounded-lg">
+                            <div class="w-3 h-3 bg-cyan-500 rounded-full"></div>
+                            <div>
+                                <div class="font-semibold text-slate-800">fulfillment.assigned</div>
+                                <div class="text-sm text-slate-600">Warehouse task created</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Communication Patterns</h3>
+                    <div class="space-y-6">
+                        <div class="highlight">
+                            <h4 class="font-semibold text-slate-800 mb-2">Synchronous</h4>
+                            <p class="text-slate-600 text-sm">
+                                Client applications communicate through GraphQL Gateway which orchestrates 
+                                calls to individual services. Used for real-time operations like checkout.
+                            </p>
+                        </div>
+                        
+                        <div class="highlight">
+                            <h4 class="font-semibold text-slate-800 mb-2">Asynchronous</h4>
+                            <p class="text-slate-600 text-sm">
+                                Services communicate via Kafka topics for event-driven workflows. 
+                                Used for order processing, notifications, and inventory updates.
+                            </p>
+                        </div>
+                        
+                        <div class="highlight">
+                            <h4 class="font-semibold text-slate-800 mb-2">Service Mesh</h4>
+                            <p class="text-slate-600 text-sm">
+                                Inter-service communication secured with mTLS, circuit breakers, 
+                                and retry policies for enhanced reliability and observability.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Examples -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">Implementation Examples</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    Sample code and patterns used across the microservices architecture
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">JWT Authentication</h3>
+                    <div class="code-block code-font" data-lang="typescript">
+const generateTokens = async (user: User) => {
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    roles: user.roles,
+    warehouseId: user.warehouseId
+  };
+  
+  const accessToken = jwt.sign(payload, JWT_SECRET, {
+    expiresIn: '15m',
+    issuer: 'qcom.auth',
+    audience: 'qcom.platform'
+  });
+  
+  const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+    expiresIn: '7d',
+    issuer: 'qcom.auth'
+  });
+  
+  return { accessToken, refreshToken };
+};
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Inventory Reservation</h3>
+                    <div class="code-block code-font" data-lang="typescript">
+const reserveStock = async (items: OrderItem[]) => {
+  return await db.transaction(async (trx) => {
+    const reservations = [];
+    
+    for (const item of items) {
+      const stock = await trx('stock')
+        .where({ warehouseId: item.warehouseId, skuId: item.skuId })
+        .forUpdate()
+        .first();
+      
+      if (stock.onHand - stock.reserved < item.quantity) {
+        throw new InsufficientStockError();
+      }
+      
+      await trx('stock')
+        .where({ warehouseId: item.warehouseId, skuId: item.skuId })
+        .increment('reserved', item.quantity);
+      
+      const reservation = await trx('reservations').insert({
+        warehouseId: item.warehouseId,
+        skuId: item.skuId,
+        quantity: item.quantity,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      });
+      
+      reservations.push(reservation);
+    }
+    
+    return reservations;
+  });
+};
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Event Publishing</h3>
+                    <div class="code-block code-font" data-lang="typescript">
+const publishOrderPlaced = async (order: Order) => {
+  const event = {
+    eventId: uuid(),
+    eventType: 'order.placed',
+    aggregateId: order.id,
+    timestamp: new Date(),
+    source: 'orders-service',
+    payload: {
+      orderId: order.id,
+      userId: order.userId,
+      total: order.total,
+      items: order.items
+    }
+  };
+  
+  await kafkaProducer.send({
+    topic: 'order.placed',
+    messages: [{
+      key: order.id,
+      value: JSON.stringify(event)
+    }]
+  });
+  
+  return event;
+};
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Delivery Fee Calculation</h3>
+                    <div class="code-block code-font" data-lang="typescript">
+const calculateDeliveryFee = (
+  customerLocation: Point,
+  warehouseLocation: Point,
+  userPolicy: UserPolicy
+) => {
+  const distance = calculateDistance(
+    customerLocation,
+    warehouseLocation
+  );
+  
+  if (distance <= userPolicy.freeRadiusKm) {
+    return { fee: 0, isFree: true };
+  }
+  
+  const baseFee = 20;
+  const perKmFee = 6;
+  const baseKm = 3;
+  
+  const additionalDistance = Math.max(0, distance - baseKm);
+  const fee = baseFee + (additionalDistance * perKmFee);
+  
+  return {
+    fee: Math.round(fee),
+    isFree: false,
+    distance,
+    sellerCost: userPolicy.payMode === 'seller' ? fee : 0
+  };
+};
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">Q</span>
+                    </div>
+                    <span class="text-xl font-bold text-white">QCom Platform</span>
+                </div>
+                <p class="text-slate-400 mb-6">
+                    India-focused quick-commerce platform with multi-seller catalog and multi-warehouse fulfillment
+                </p>
+                <div class="text-sm text-slate-500">
+                    © 2024 QCom Platform. Built with modern microservices architecture.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Service card animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const serviceCards = document.querySelectorAll('.service-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (typeof anime !== 'undefined') {
+                            anime({
+                                targets: entry.target,
+                                translateY: [50, 0],
+                                opacity: [0, 1],
+                                duration: 600,
+                                easing: 'easeOutQuad'
+                            });
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            serviceCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                observer.observe(card);
+            });
+            
+            // API endpoint hover effects
+            document.querySelectorAll('.api-endpoint').forEach(endpoint => {
+                endpoint.addEventListener('mouseenter', function() {
+                    if (typeof anime !== 'undefined') {
+                        anime({
+                            targets: this,
+                            scale: 1.02,
+                            duration: 200,
+                            easing: 'easeOutQuad'
+                        });
+                    }
+                });
+                
+                endpoint.addEventListener('mouseleave', function() {
+                    if (typeof anime !== 'undefined') {
+                        anime({
+                            targets: this,
+                            scale: 1,
+                            duration: 200,
+                            easing: 'easeOutQuad'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

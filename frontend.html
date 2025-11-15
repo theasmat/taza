@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Applications - QCom Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #f59e0b;
+            --tertiary: #64748b;
+            --background: #fafafa;
+            --success: #10b981;
+            --warning: #f97316;
+            --error: #ef4444;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fafafa 0%, #f1f5f9 100%);
+            overflow-x: hidden;
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .app-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .app-card:hover::before {
+            left: 100%;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.98);
+        }
+        
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .customer-icon { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .vendor-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .warehouse-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .rider-icon { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        
+        .flow-step {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-step:hover {
+            border-color: var(--secondary);
+            transform: scale(1.02);
+        }
+        
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+        
+        .flow-step:last-child::after {
+            display: none;
+        }
+        
+        .tech-stack-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .tech-stack-item:hover {
+            border-color: var(--secondary);
+            transform: scale(1.05);
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        .screen-mockup {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .screen-mockup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(135deg, #334155 0%, #475569 100%);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .screen-content {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 40px;
+            min-height: 300px;
+        }
+        
+        .feature-badge {
+            background: linear-gradient(135deg, var(--secondary) 0%, #f97316 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 2px;
+        }
+        
+        .graphql-query {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">Q</span>
+                    </div>
+                    <span class="text-xl font-bold text-slate-800">QCom</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link text-slate-600 hover:text-slate-800 font-medium">Overview</a>
+                    <a href="services.html" class="nav-link text-slate-600 hover:text-slate-800 font-medium">Services</a>
+                    <a href="frontend.html" class="nav-link active text-slate-800 font-medium">Frontend</a>
+                    <a href="infrastructure.html" class="nav-link text-slate-600 hover:text-slate-800 font-medium">Infrastructure</a>
+                </div>
+                <button class="md:hidden p-2 rounded-lg bg-slate-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-16 bg-gradient-to-br from-slate-800 to-slate-900">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl font-bold text-white mb-6">Frontend Applications</h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Multi-platform client applications providing seamless user experiences across 
+                    customer shopping, vendor management, warehouse operations, and delivery coordination.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4">📱</div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Customer App</h3>
+                    <p class="text-gray-300 text-sm">Shopping & Checkout</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4">🏪</div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Vendor App</h3>
+                    <p class="text-gray-300 text-sm">Catalog & Orders</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4">🏭</div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Warehouse App</h3>
+                    <p class="text-gray-300 text-sm">Pick & Pack</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4">🚚</div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Rider App</h3>
+                    <p class="text-gray-300 text-sm">Delivery</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Overview -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">Client Applications</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    Four specialized applications designed for different user roles in the QCom ecosystem
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Customer App -->
+                <div class="app-card rounded-2xl p-8">
+                    <div class="app-icon customer-icon text-white">🛍️</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Customer Web/Mobile</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Primary shopping interface with product discovery, cart management, checkout flow, 
+                        and order tracking. Optimized for quick commerce with location-based inventory.
+                    </p>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Key Features</h4>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="feature-badge">Product Search</span>
+                            <span class="feature-badge">Smart Cart</span>
+                            <span class="feature-badge">Real-time Pricing</span>
+                            <span class="feature-badge">Order Tracking</span>
+                            <span class="feature-badge">COD Payment</span>
+                            <span class="feature-badge">Address Management</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Technology Stack</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">⚛️</div>
+                                <div class="text-sm font-medium">React Native</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">🎨</div>
+                                <div class="text-sm font-medium">Tailwind CSS</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">📊</div>
+                                <div class="text-sm font-medium">Apollo Client</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="screen-mockup">
+                        <div class="screen-content">
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-blue-600 text-xl">📦</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Fresh Vegetables</div>
+                                        <div class="text-sm text-slate-600">₹45 • 500g</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-green-600 text-xl">🥛</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Organic Milk</div>
+                                        <div class="text-sm text-slate-600">₹28 • 500ml</div>
+                                    </div>
+                                </div>
+                                <div class="pt-4 border-t">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-semibold text-slate-800">Total: ₹73</span>
+                                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Checkout</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vendor App -->
+                <div class="app-card rounded-2xl p-8">
+                    <div class="app-icon vendor-icon text-white">🏪</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Vendor Dashboard</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Seller management interface for catalog operations, order processing, 
+                        inventory updates, and business analytics. Multi-tenant architecture.
+                    </p>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Key Features</h4>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="feature-badge">Product CRUD</span>
+                            <span class="feature-badge">Price Management</span>
+                            <span class="feature-badge">Order Dashboard</span>
+                            <span class="feature-badge">Inventory Sync</span>
+                            <span class="feature-badge">Analytics</span>
+                            <span class="feature-badge">Payouts</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Technology Stack</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">🌐</div>
+                                <div class="text-sm font-medium">React.js</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">📈</div>
+                                <div class="text-sm font-medium">Chart.js</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">🔒</div>
+                                <div class="text-sm font-medium">Role-based Auth</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="screen-mockup">
+                        <div class="screen-content">
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="font-bold text-slate-800">Today's Orders</h3>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">24 New</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <div class="text-2xl font-bold text-blue-600">₹12,450</div>
+                                        <div class="text-sm text-slate-600">Revenue</div>
+                                    </div>
+                                    <div class="bg-green-50 p-4 rounded-lg">
+                                        <div class="text-2xl font-bold text-green-600">156</div>
+                                        <div class="text-sm text-slate-600">Products</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span>Pending Orders</span>
+                                        <span class="font-semibold">8</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span>Low Stock Items</span>
+                                        <span class="font-semibold text-orange-600">3</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Warehouse App -->
+                <div class="app-card rounded-2xl p-8">
+                    <div class="app-icon warehouse-icon text-white">🏭</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Warehouse Keeper</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Specialized interface for warehouse staff with task management, pick/pack operations, 
+                        barcode scanning, and exception handling workflows.
+                    </p>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Key Features</h4>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="feature-badge">Task Queue</span>
+                            <span class="feature-badge">Barcode Scan</span>
+                            <span class="feature-badge">Pick List</span>
+                            <span class="feature-badge">Pack Verification</span>
+                            <span class="feature-badge">Exception Handling</span>
+                            <span class="feature-badge">Real-time Updates</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Technology Stack</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">📱</div>
+                                <div class="text-sm font-medium">PWA</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">📷</div>
+                                <div class="text-sm font-medium">Camera API</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">⚡</div>
+                                <div class="text-sm font-medium">WebSocket</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="screen-mockup">
+                        <div class="screen-content">
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="font-bold text-slate-800">Active Tasks</h3>
+                                    <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">3 Pending</span>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="border-l-4 border-blue-500 pl-4 py-2">
+                                        <div class="font-semibold text-slate-800">Order #QC-2024-001</div>
+                                        <div class="text-sm text-slate-600">5 items • Priority: High</div>
+                                        <div class="text-xs text-green-600 mt-1">✓ Picking in progress</div>
+                                    </div>
+                                    <div class="border-l-4 border-green-500 pl-4 py-2">
+                                        <div class="font-semibold text-slate-800">Order #QC-2024-002</div>
+                                        <div class="text-sm text-slate-600">3 items • Priority: Normal</div>
+                                        <div class="text-xs text-blue-600 mt-1">📦 Ready for packing</div>
+                                    </div>
+                                </div>
+                                <button class="w-full bg-amber-500 text-white py-3 rounded-lg font-semibold">
+                                    Scan Next Item
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rider App -->
+                <div class="app-card rounded-2xl p-8">
+                    <div class="app-icon rider-icon text-white">🚚</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Rider Application</h3>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Delivery partner interface for order assignment, navigation, delivery confirmation, 
+                        and earnings tracking. GPS-integrated with real-time updates.
+                    </p>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Key Features</h4>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="feature-badge">Job Assignment</span>
+                            <span class="feature-badge">GPS Navigation</span>
+                            <span class="feature-badge">Delivery Confirm</span>
+                            <span class="feature-badge">Earnings Tracker</span>
+                            <span class="feature-badge">Route Optimization</span>
+                            <span class="feature-badge">Customer Contact</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-slate-800 mb-3">Technology Stack</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">🗺️</div>
+                                <div class="text-sm font-medium">Maps API</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">📍</div>
+                                <div class="text-sm font-medium">GPS Tracking</div>
+                            </div>
+                            <div class="tech-stack-item">
+                                <div class="text-2xl mb-2">💰</div>
+                                <div class="text-sm font-medium">Payment Integration</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="screen-mockup">
+                        <div class="screen-content">
+                            <div class="space-y-4">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-purple-600 mb-1">₹245</div>
+                                    <div class="text-sm text-slate-600">Today's Earnings</div>
+                                </div>
+                                <div class="bg-purple-50 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-semibold text-slate-800">Current Delivery</span>
+                                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">In Transit</span>
+                                    </div>
+                                    <div class="text-sm text-slate-600 mb-3">
+                                        Order #QC-2024-003<br>
+                                        📍 123 Main Street, Mumbai<br>
+                                        ⏱️ 15 min ETA
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-purple-500 text-white py-2 rounded text-sm">Navigate</button>
+                                        <button class="flex-1 border border-purple-500 text-purple-500 py-2 rounded text-sm">Call</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GraphQL Gateway -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">GraphQL Gateway</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    Unified API layer aggregating all backend services with optimized queries and real-time subscriptions
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Key Queries</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Product Search</h4>
+                            <div class="graphql-query">
+query SearchProducts($query: String!, $location: PointInput) {
+  products(query: $query, near: $location) {
+    id
+    name
+    price
+    availability {
+      warehouseId
+      inStock
+      deliveryTime
+    }
+  }
+}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Get Quote</h4>
+                            <div class="graphql-query">
+query GetQuote($items: [CartItemInput]!, $address: AddressInput!) {
+  quote(items: $items, address: $address) {
+    warehouseId
+    deliveryFee
+    sellerDeliveryCost
+    tax
+    total
+    estimatedDelivery
+  }
+}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Checkout</h4>
+                            <div class="graphql-query">
+mutation Checkout($input: CheckoutInput!, $idempotencyKey: String!) {
+  checkout(input: $input, idempotencyKey: $idempotencyKey) {
+    order {
+      id
+      status
+      total
+      estimatedDelivery
+    }
+  }
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Gateway Benefits</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600 text-sm">📡</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-1">Single Endpoint</h4>
+                                <p class="text-slate-600 text-sm">One GraphQL endpoint for all client applications simplifying API consumption</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-green-600 text-sm">⚡</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-1">Query Optimization</h4>
+                                <p class="text-slate-600 text-sm">DataLoader for batching and caching reduces N+1 queries</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-purple-600 text-sm">🔒</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-1">Authentication</h4>
+                                <p class="text-slate-600 text-sm">Centralized JWT validation and role-based access control</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-amber-600 text-sm">📊</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-1">Real-time Updates</h4>
+                                <p class="text-slate-600 text-sm">GraphQL subscriptions for live order and inventory updates</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-red-600 text-sm">🛡️</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-1">Rate Limiting</h4>
+                                <p class="text-slate-600 text-sm">Request throttling and abuse prevention per client</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Flow -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">Customer Journey</h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                    End-to-end user flow from product discovery to delivery confirmation
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
+                <div class="flow-step">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-blue-600 text-2xl">🔍</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 mb-2">Discover</h3>
+                        <p class="text-sm text-slate-600">Browse products with location-based availability</p>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-green-600 text-2xl">🛒</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 mb-2">Add to Cart</h3>
+                        <p class="text-sm text-slate-600">Smart cart with real-time pricing updates</p>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-amber-600 text-2xl">💰</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 mb-2">Get Quote</h3>
+                        <p class="text-sm text-slate-600">Dynamic delivery fee calculation</p>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-purple-600 text-2xl">✅</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 mb-2">Checkout</h3>
+                        <p class="text-sm text-slate-600">COD payment with idempotent processing</p>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-red-600 text-2xl">🚚</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 mb-2">Track</h3>
+                        <p class="text-sm text-slate-600">Real-time order and delivery tracking</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 rounded-2xl p-8">
+                <img src="resources/order-flow.png" alt="Order Flow" class="w-full h-auto rounded-lg">
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">Q</span>
+                    </div>
+                    <span class="text-xl font-bold text-white">QCom Platform</span>
+                </div>
+                <p class="text-slate-400 mb-6">
+                    India-focused quick-commerce platform with multi-seller catalog and multi-warehouse fulfillment
+                </p>
+                <div class="text-sm text-slate-500">
+                    © 2024 QCom Platform. Built with modern microservices architecture.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // App card animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const appCards = document.querySelectorAll('.app-card');
+            const flowSteps = document.querySelectorAll('.flow-step');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (typeof anime !== 'undefined') {
+                            anime({
+                                targets: entry.target,
+                                translateY: [50, 0],
+                                opacity: [0, 1],
+                                duration: 600,
+                                easing: 'easeOutQuad'
+                            });
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            [...appCards, ...flowSteps].forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                observer.observe(card);
+            });
+            
+            // Tech stack hover effects
+            document.querySelectorAll('.tech-stack-item').forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    if (typeof anime !== 'undefined') {
+                        anime({
+                            targets: this,
+                            scale: 1.05,
+                            duration: 200,
+                            easing: 'easeOutQuad'
+                        });
+                    }
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    if (typeof anime !== 'undefined') {
+                        anime({
+                            targets: this,
+                            scale: 1,
+                            duration: 200,
+                            easing: 'easeOutQuad'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

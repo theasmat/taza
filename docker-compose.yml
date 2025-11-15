@@ -1,0 +1,302 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgis/postgis:17-3.4
+    container_name: qcom-postgres
+    environment:
+      POSTGRES_DB: qcom
+      POSTGRES_USER: qcom_user
+      POSTGRES_PASSWORD: qcom_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qcom_user -d qcom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qcom-network
+
+  # Redis Cache
+  redis:
+    image: redis:8-alpine
+    container_name: qcom-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qcom-network
+
+  # Kafka (KRaft mode - no ZooKeeper needed)
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: qcom-kafka
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qcom-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: qcom-auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      JWT_SECRET: dev-jwt-secret-key-change-in-production
+      JWT_REFRESH_SECRET: dev-jwt-refresh-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/auth/src:/app/src
+    networks:
+      - qcom-network
+
+  # Catalog Service
+  catalog-service:
+    build:
+      context: ./services/catalog
+      dockerfile: Dockerfile
+    container_name: qcom-catalog-service
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/catalog/src:/app/src
+    networks:
+      - qcom-network
+
+  # Inventory Service
+  inventory-service:
+    build:
+      context: ./services/inventory
+      dockerfile: Dockerfile
+    container_name: qcom-inventory-service
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/inventory/src:/app/src
+    networks:
+      - qcom-network
+
+  # Pricing Service
+  pricing-service:
+    build:
+      context: ./services/pricing
+      dockerfile: Dockerfile
+    container_name: qcom-pricing-service
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/pricing/src:/app/src
+    networks:
+      - qcom-network
+
+  # Orders Service
+  orders-service:
+    build:
+      context: ./services/orders
+      dockerfile: Dockerfile
+    container_name: qcom-orders-service
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/orders/src:/app/src
+    networks:
+      - qcom-network
+
+  # Fulfillment Service
+  fulfillment-service:
+    build:
+      context: ./services/fulfillment
+      dockerfile: Dockerfile
+    container_name: qcom-fulfillment-service
+    ports:
+      - "3006:3006"
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/fulfillment/src:/app/src
+    networks:
+      - qcom-network
+
+  # Notifications Service
+  notifications-service:
+    build:
+      context: ./services/notifications
+      dockerfile: Dockerfile
+    container_name: qcom-notifications-service
+    ports:
+      - "3007:3007"
+    environment:
+      NODE_ENV: development
+      PORT: 3007
+      DATABASE_URL: postgresql://qcom_user:qcom_password@postgres:5432/qcom
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: your-email@gmail.com
+      SMTP_PASS: your-app-password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./services/notifications/src:/app/src
+    networks:
+      - qcom-network
+
+  # GraphQL Gateway
+  gateway:
+    build:
+      context: ./apps/gateway
+      dockerfile: Dockerfile
+    container_name: qcom-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3001
+      CATALOG_SERVICE_URL: http://catalog-service:3002
+      INVENTORY_SERVICE_URL: http://inventory-service:3003
+      PRICING_SERVICE_URL: http://pricing-service:3004
+      ORDERS_SERVICE_URL: http://orders-service:3005
+      FULFILLMENT_SERVICE_URL: http://fulfillment-service:3006
+      NOTIFICATIONS_SERVICE_URL: http://notifications-service:3007
+    depends_on:
+      - auth-service
+      - catalog-service
+      - inventory-service
+      - pricing-service
+      - orders-service
+      - fulfillment-service
+      - notifications-service
+    volumes:
+      - ./apps/gateway/src:/app/src
+    networks:
+      - qcom-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+
+networks:
+  qcom-network:
+    driver: bridge
